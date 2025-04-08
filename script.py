@@ -22,6 +22,7 @@ def generate_sample_data(cities, start_date, num_days, base_costs):
     
     df = pd.DataFrame(data)
     df.to_csv('costs_by_date.csv', index=False)
+    df.to_csv('vs/costs_by_date.csv', index=False)
     print("Sample data generated in 'costs_by_date.csv'")
     print(f"First few rows of generated data:\n{df.head()}")
 
