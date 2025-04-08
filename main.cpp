@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 #include <iomanip>
+#include <numeric>
 
 struct Result
 {
@@ -14,10 +15,14 @@ struct Result
 };
 
 Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
-                const std::vector<std::string> &cityNames)
+                const std::vector<std::string> &cityNames,
+                const std::vector<int> &stayDurations)
 {
     const int numCities = cityNames.size();
     const int numDays = costMatrix.size();
+
+    // Calculate total trip duration needed
+    int totalDuration = std::accumulate(stayDurations.begin(), stayDurations.end(), 0) + 1;
 
     std::vector<int> cities;
     for (int i = 0; i < numCities; i++)
@@ -37,9 +42,8 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
         int currentDay = 0;
 
         // Try starting on different days
-        for (int startDay = 0; startDay <= numDays - numCities; startDay++)
+        for (int startDay = 0; startDay <= numDays - totalDuration ; startDay++)
         {
-            std::cout << "Trying start day: " << startDay << "\n";
             currentDay = startDay;
             currentCost = 0;
             travelDays.clear();
@@ -48,7 +52,9 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
             // Try each city transition
             for (int i = 0; i < numCities - 1 && validPath; i++)
             {
-                // Stay one day in current city
+                // Stay in current city for specified duration
+                currentDay += stayDurations[i];
+
                 if (currentDay >= numDays)
                 {
                     validPath = false;
@@ -58,12 +64,12 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
                 // Add travel cost to next city
                 currentCost += costMatrix[currentDay][cities[i]][cities[i + 1]];
                 travelDays.push_back(currentDay);
-                currentDay++;
             }
 
-            // Return to starting city
-            if (validPath && currentDay < numDays)
+            // Handle last city stay and return to start
+            if (validPath && currentDay + stayDurations[numCities - 1] < numDays)
             {
+                currentDay += stayDurations[numCities - 1];
                 currentCost += costMatrix[currentDay][cities[numCities - 1]][cities[0]];
                 travelDays.push_back(currentDay);
 
@@ -75,12 +81,8 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
                 }
             }
         }
-        std::cout << "Current path: ";
-        for (int i : cities)
-            std::cout << i << " ";
-        std::cout << "\n";
-        std::cout << "Current cost: " << currentCost << "\n";
     } while (std::next_permutation(cities.begin() + 1, cities.end()));
+
     return result;
 }
 
@@ -88,7 +90,7 @@ int main()
 {
     // City names
     std::vector<std::string> cityNames = {"Kochi", "Cologne", "Paris"};
-    int daysPerCity = 1;
+    std::vector<int> stayDurations = {0, 2, 2};
 
     // Sample cost matrix for 3 cities
     std::vector<std::vector<std::vector<double>>> costMatrix = {
@@ -103,31 +105,30 @@ int main()
          {20, 2, 0}},
         {{0, 4, 8},
          {4, 0, 2},
-         {8, 2, 0}}};
+         {8, 2, 0}},
+        {{0, 4, 8},
+         {4, 0, 2},
+         {8, 2, 0}} };
 
-    Result result = solveTSP(costMatrix, cityNames);
+    Result result = solveTSP(costMatrix, cityNames, stayDurations);
 
     // Print results
     std::cout << "Minimum total cost: " << std::fixed << std::setprecision(2)
               << result.minCost << std::endl;
-    std::cout << "\nOptimal route with travel days:\n";
+    std::cout << "\nOptimal route with stays:\n";
 
-    // Print intermediate cities and travels
-    for (int i = 0; i < result.path.size() - 1; i++)
-    {
+    // Print intermediate cities and stays
+    for (int i = 0; i < result.path.size() - 1; i++) {
         std::cout << "Day " << result.travelDays[i] << ": Travel from "
-                  << result.cityNames[result.path[i]] << " to "
-                  << result.cityNames[result.path[i + 1]] << "\n";
-        std::cout << "Day " << result.travelDays[i] << ": Stay at "
-                  << result.cityNames[result.path[i + 1]] << "\n\n";
+                 << result.cityNames[result.path[i]] << " to "
+                 << result.cityNames[result.path[i + 1]] << "\n";
+        std::cout << "Stay at " << result.cityNames[result.path[i + 1]]
+                 << " for " << stayDurations[i + 1] << " days\n\n";
     }
 
-    // Print final travel and return
+    // Print final return
     int last = result.path.size() - 1;
-    std::cout << "Day " << result.travelDays[last] << ": Travel from "
-              << result.cityNames[result.path[last]] << " to "
-              << result.cityNames[result.path[0]] << "\n";
-    std::cout << "Day " << result.travelDays[last] << ": End at "
+    std::cout << "Day " << result.travelDays[last] << ": Return to "
               << result.cityNames[result.path[0]] << "\n";
 
     return 0;
