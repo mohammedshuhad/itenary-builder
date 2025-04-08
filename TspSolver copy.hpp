@@ -14,10 +14,10 @@ class TspSolver
 public:
     struct Result
     {
-        double min_cost;
-        std::vector<int> route_indices;
-        std::vector<std::string> route_cities;
-        std::vector<Date> dates;
+        double total_cost;               // Total cost of the journey
+        std::vector<int> path;           // Path as city indices
+        std::vector<int> days;           // Days when each city is visited
+        std::vector<std::string> cities; // Path as city names
     };
 
     static Result solveTsp(
@@ -26,12 +26,12 @@ public:
         const std::vector<int> &stay_durations,
         const Date &start_date);
 
-    static std::tuple<std::vector<std::string>, std::vector<Matrix>>
-    readCostMatrices(
-        const std::string &csv_path,
-        const Date &start_date,
-        int num_days,
-        const std::string &start_city);
+    // static std::tuple<std::vector<std::string>, std::vector<Matrix>>
+    // readCostMatrices(
+    //     const std::string &csv_path,
+    //     const Date &start_date,
+    //     int num_days,
+    //     const std::string &start_city);
 
 private:
     static bool isValidSchedule(int current_day, int days_needed, int num_dates);

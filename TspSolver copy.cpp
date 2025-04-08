@@ -39,19 +39,12 @@ TspSolver::Result TspSolver::solveTsp(
         {
             const auto &[visited, current, day] = s;
             size_t hash = 0;
-
-            // Hash the visited cities vector
             for (int city : visited)
             {
                 hash ^= std::hash<int>{}(city) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
             }
-
-            // Combine with current city hash
             hash ^= std::hash<int>{}(current) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-
-            // Combine with day hash
             hash ^= std::hash<int>{}(day) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-
             return hash;
         }
     };
@@ -70,7 +63,6 @@ TspSolver::Result TspSolver::solveTsp(
         }
     }
 
-// ...existing code...
 
     // Main dynamic programming loop
     for (int visited_count = 2; visited_count <= n; visited_count++) {
@@ -155,92 +147,92 @@ TspSolver::Result TspSolver::solveTsp(
     return result;
 }
 
-std::tuple<std::vector<std::string>, std::vector<Matrix>>
-TspSolver::readCostMatrices(
-    const std::string &csv_path,
-    const Date &start_date,
-    int num_days,
-    const std::string &start_city)
-{
-    std::vector<std::string> cities;
-    std::vector<Matrix> cost_matrices;
+// std::tuple<std::vector<std::string>, std::vector<Matrix>>
+// TspSolver::readCostMatrices(
+//     const std::string &csv_path,
+//     const Date &start_date,
+//     int num_days,
+//     const std::string &start_city)
+// {
+    // std::vector<std::string> cities;
+    // std::vector<Matrix> cost_matrices;
 
-    // Read CSV file
-    std::ifstream file(csv_path);
-    if (!file.is_open())
-    {
-        throw std::runtime_error("Could not open file: " + csv_path);
-    }
+    // // Read CSV file
+    // std::ifstream file(csv_path);
+    // if (!file.is_open())
+    // {
+    //     throw std::runtime_error("Could not open file: " + csv_path);
+    // }
 
-    // Read header to get cities
-    std::string header;
-    std::getline(file, header);
-    std::stringstream header_stream(header);
-    std::string cell;
+    // // Read header to get cities
+    // std::string header;
+    // std::getline(file, header);
+    // std::stringstream header_stream(header);
+    // std::string cell;
 
-    // Skip first column (from city)
-    std::getline(header_stream, cell, ',');
+    // // Skip first column (from city)
+    // std::getline(header_stream, cell, ',');
 
-    // Read cities from header
-    while (std::getline(header_stream, cell, ',')) {
-        cities.push_back(cell);
-    }
+    // // Read cities from header
+    // while (std::getline(header_stream, cell, ',')) {
+    //     cities.push_back(cell);
+    // }
 
-    int n = cities.size();
+    // int n = cities.size();
     
-    // Find index of start city
-    auto start_idx = std::find(cities.begin(), cities.end(), start_city);
-    if (start_idx == cities.end()) {
-        throw std::runtime_error("Start city not found in CSV");
-    }
+    // // Find index of start city
+    // auto start_idx = std::find(cities.begin(), cities.end(), start_city);
+    // if (start_idx == cities.end()) {
+    //     throw std::runtime_error("Start city not found in CSV");
+    // }
     
-    // If start city is not first, reorder cities to put it first
-    if (start_idx != cities.begin()) {
-        std::rotate(cities.begin(), start_idx, cities.end());
-    }
+    // // If start city is not first, reorder cities to put it first
+    // if (start_idx != cities.begin()) {
+    //     std::rotate(cities.begin(), start_idx, cities.end());
+    // }
 
-    // Initialize cost matrices for each day
-    cost_matrices.resize(num_days);
-    for (int day = 0; day < num_days; day++) {
-        cost_matrices[day].resize(n, std::vector<double>(n, std::numeric_limits<double>::infinity()));
-    }
+    // // Initialize cost matrices for each day
+    // cost_matrices.resize(num_days);
+    // for (int day = 0; day < num_days; day++) {
+    //     cost_matrices[day].resize(n, std::vector<double>(n, std::numeric_limits<double>::infinity()));
+    // }
 
-    // Read cost data
-    std::string line;
-    while (std::getline(file, line)) {
-        std::stringstream line_stream(line);
-        std::string from_city;
-        std::getline(line_stream, from_city, ',');
+    // // Read cost data
+    // std::string line;
+    // while (std::getline(file, line)) {
+    //     std::stringstream line_stream(line);
+    //     std::string from_city;
+    //     std::getline(line_stream, from_city, ',');
         
-        // Find index of source city
-        auto from_idx = std::find(cities.begin(), cities.end(), from_city);
-        if (from_idx == cities.end()) continue;
-        int i = std::distance(cities.begin(), from_idx);
+    //     // Find index of source city
+    //     auto from_idx = std::find(cities.begin(), cities.end(), from_city);
+    //     if (from_idx == cities.end()) continue;
+    //     int i = std::distance(cities.begin(), from_idx);
 
-        // Read costs to each destination
-        int j = 0;
-        while (std::getline(line_stream, cell, ',')) {
-            if (cell.empty() || cell == "NA") {
-                j++;
-                continue;
-            }
+    //     // Read costs to each destination
+    //     int j = 0;
+    //     while (std::getline(line_stream, cell, ',')) {
+    //         if (cell.empty() || cell == "NA") {
+    //             j++;
+    //             continue;
+    //         }
 
-            double base_cost = std::stod(cell);
+    //         double base_cost = std::stod(cell);
             
-            // Apply cost variations for different days
-            for (int day = 0; day < num_days; day++) {
-                // Apply day-of-week pricing factor (example: weekend surcharge)
-                Date current_date = start_date + day;
-                double day_factor = (current_date.isWeekend()) ? 1.2 : 1.0;
+    //         // Apply cost variations for different days
+    //         for (int day = 0; day < num_days; day++) {
+    //             // Apply day-of-week pricing factor (example: weekend surcharge)
+    //             Date current_date = start_date + day;
+    //             double day_factor = (current_date.isWeekend()) ? 1.2 : 1.0;
                 
-                // Apply seasonal pricing factor (example: holiday season)
-                double season_factor = current_date.getSeasonFactor();
+    //             // Apply seasonal pricing factor (example: holiday season)
+    //             double season_factor = current_date.getSeasonFactor();
                 
-                cost_matrices[day][i][j] = base_cost * day_factor * season_factor;
-            }
-            j++;
-        }
-    }
+    //             cost_matrices[day][i][j] = base_cost * day_factor * season_factor;
+    //         }
+    //         j++;
+    //     }
+    // }
 
-    return std::make_tuple(cities, cost_matrices);
-}
+    // return std::make_tuple(cities, cost_matrices);
+// }
