@@ -1,3 +1,4 @@
+import os
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
@@ -56,10 +57,14 @@ def fetch_flight_data(departure_id: str, arrival_id: str,
         output_file (str): Name of output CSV file
     """
 
+    data_dir = "Data"
+
     if output_file is None:
         # Create filename: DEP-ARR_YYYYMMDD-YYYYMMDD.csv
-        output_file = f"{departure_id}-{arrival_id}_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}.csv"
-
+        output_file = os.path.join(
+            data_dir, 
+            f"{departure_id}-{arrival_id}_{start_date.strftime('%Y-%m-%d')}-{end_date.strftime('%Y-%m-%d')}.csv"
+        )
     data: List[Dict] = []
     current_date = start_date
     
@@ -128,11 +133,29 @@ def fetch_flight_data(departure_id: str, arrival_id: str,
     else:
         print("No data was collected")
 
+def fetch_all_routes(cities: List[str], start_date: datetime, end_date: datetime) -> None:
+    """
+    Fetches flight data for all possible combinations of cities.
+    
+    Args:
+        cities (List[str]): List of airport codes
+        start_date (datetime): Start date of range
+        end_date (datetime): End date of range
+    """
+    # Generate all possible pairs of cities
+    for departure in cities:
+        for arrival in cities:
+            if departure != arrival:  # Skip same city pairs
+                print(f"\nFetching flights from {departure} to {arrival}...")
+                fetch_flight_data(departure, arrival, start_date, end_date)
+
 # Example usage
 if __name__ == "__main__":
-    departure = "FRA"
-    arrival = "FCO"
+    # List of cities (airport codes)
+    cities = ["COK", "ZRH", "FRA"]
+    
+    # Date range
     start = datetime(2025, 5, 16)
     end = datetime(2025, 5, 23)
     
-    fetch_flight_data(departure, arrival, start, end)
+    fetch_all_routes(cities, start, end)
