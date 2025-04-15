@@ -89,7 +89,7 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
 int main()
 {
     // City names
-    std::vector<std::string> cityNames = {"Kochi", "Cologne", "Paris"};
+    std::vector<std::string> cityNames = {"COK", "ZRH", "FRA"};
     std::vector<int> stayDurations = {0, 2, 2};
 
     // Sample cost matrix for 3 cities
