@@ -5,6 +5,9 @@
 #include <string>
 #include <iomanip>
 #include <numeric>
+#include <fstream>
+#include <filesystem>
+#include <sstream>
 
 struct Result
 {
@@ -86,29 +89,126 @@ Result solveTSP(const std::vector<std::vector<std::vector<double>>> &costMatrix,
     return result;
 }
 
+std::vector<std::vector<std::vector<double>>> buildCostMatrix(
+    const std::vector<std::string>& cityNames,
+    const std::string& dataDir = "Data") {
+    
+    int numCities = cityNames.size();
+    int numDays = 0;
+    std::vector<std::vector<std::vector<double>>> costMatrix;
+    
+    // First, determine number of days by checking any single route
+    std::string firstFile = dataDir + "/" + cityNames[0] + "-" + cityNames[1] + "_*.csv";
+    for (const auto& entry : std::filesystem::directory_iterator(dataDir)) {
+        if (entry.path().string().find(cityNames[0] + "-" + cityNames[1]) != std::string::npos) {
+            std::ifstream file(entry.path());
+            std::string line;
+            // Skip header
+            std::getline(file, line);
+            while (std::getline(file, line)) {
+                numDays++;
+            }
+            break;
+        }
+    }
+    
+    // Initialize cost matrix
+    costMatrix.resize(numDays, 
+        std::vector<std::vector<double>>(numCities, 
+            std::vector<double>(numCities, 0.0)));
+    
+    // Read each route's CSV file
+    for (int from = 0; from < numCities; from++) {
+        for (int to = 0; to < numCities; to++) {
+            if (from == to) continue;
+            
+            std::string filename = dataDir + "/" + 
+                                 cityNames[from] + "-" + 
+                                 cityNames[to] + "_*.csv";
+                                 
+            for (const auto& entry : std::filesystem::directory_iterator(dataDir)) {
+                if (entry.path().string().find(cityNames[from] + "-" + cityNames[to]) != std::string::npos) {
+                    std::ifstream file(entry.path());
+                    std::string line;
+                    // Skip header
+                    std::getline(file, line);
+                    
+                    int day = 0;
+                    while (std::getline(file, line)) {
+                        std::stringstream ss(line);
+                        std::string cell;
+                        std::vector<std::string> values;
+                        
+                        while (std::getline(ss, cell, ',')) {
+                            values.push_back(cell);
+                        }
+                        
+                        // Assuming cost is in the 4th column (index 3)
+                        costMatrix[day][from][to] = std::stod(values[3]);
+                        day++;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    return costMatrix;
+}
+
+void printCostMatrix(const std::vector<std::vector<std::vector<double>>> &costMatrix,
+                     const std::vector<std::string> &cityNames)
+{
+    std::cout << "\nCost Matrix for " << costMatrix.size() << " days:\n";
+
+    for (int day = 0; day < costMatrix.size(); day++)
+    {
+        std::cout << "\nDay " << day << ":\n";
+        std::cout << "    ";
+        for (const auto &city : cityNames)
+        {
+            std::cout << city << " ";
+        }
+        std::cout << "\n";
+
+        for (int from = 0; from < cityNames.size(); from++)
+        {
+            std::cout << cityNames[from] << " ";
+            for (int to = 0; to < cityNames.size(); to++)
+            {
+                std::cout << costMatrix[day][from][to] << " ";
+            }
+            std::cout << "\n";
+        }
+    }
+}
+
 int main()
 {
-    // City names
+     //std::vector<std::string> cityNames = {"COK", "ZRH", "FRA"};
+     //std::vector<int> stayDurations = { 0, 2, 1 };
+     //std::vector<std::vector<std::vector<double>>> costMatrix = {
+     //    {{0, 10, 20},
+     //     {10, 0, 2},
+     //     {20, 2, 0}},
+     //    {{0, 10, 20},
+     //     {10, 0, 2},
+     //     {20, 2, 0}},
+     //    {{0, 10, 20},
+     //     {10, 0, 2},
+     //     {20, 2, 0}},
+     //    {{0, 4, 8},
+     //     {4, 0, 2},
+     //     {8, 2, 0}},
+     //    {{0, 5, 9},
+     //     {5, 0, 2},
+     //     {9, 2, 0}} };
+
     std::vector<std::string> cityNames = {"COK", "ZRH", "FRA"};
     std::vector<int> stayDurations = {0, 2, 2};
-
-    // Sample cost matrix for 3 cities
-    std::vector<std::vector<std::vector<double>>> costMatrix = {
-        {{0, 3, 7},
-         {3, 0, 2},
-         {7, 2, 0}},
-        {{0, 10, 20},
-         {10, 0, 2},
-         {20, 2, 0}},
-        {{0, 10, 20},
-         {10, 0, 2},
-         {20, 2, 0}},
-        {{0, 4, 8},
-         {4, 0, 2},
-         {8, 2, 0}},
-        {{0, 4, 8},
-         {4, 0, 2},
-         {8, 2, 0}} };
+    auto costMatrix = buildCostMatrix(cityNames);
+    
+    // printCostMatrix(costMatrix, cityNames);
 
     Result result = solveTSP(costMatrix, cityNames, stayDurations);
 
